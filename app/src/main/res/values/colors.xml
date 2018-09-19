@@ -3,4 +3,9 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorList">#fafafa</color>
+    <color name="generalBackground">#f5f5f5</color>
+    <color name="recyclerColor">#dd2c00</color>
+    <color name="colorImageBackground">#FF8FA1AB</color>
+    <color name="colorToolbar">#e0e0e0</color>
 </resources>
