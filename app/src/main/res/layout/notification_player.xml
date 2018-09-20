@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="48dp"
+        android:layout_height="80dp"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/music_sign" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="41dp"
+        android:layout_height="43dp"
+        android:layout_below="@id/textViewUrlNotification"
+        android:layout_alignBottom="@+id/imageView2"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="121dp"
+        android:src="@drawable/ic_play_gray" />
+
+    <ImageButton
+        android:id="@+id/imageButton2"
+        android:layout_width="46dp"
+        android:layout_height="43dp"
+        android:layout_below="@id/textViewUrlNotification"
+        android:layout_alignBottom="@+id/imageView2"
+        android:layout_toEndOf="@+id/imageButton"
+        android:src="@drawable/ic_pause_gray" />
+
+    <TextView
+        android:id="@+id/textViewTitleNotification"
+        android:layout_width="match_parent"
+        android:layout_toEndOf="@id/imageView2"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:gravity="center"
+        android:text="@string/now_playing"
+        android:textColor="#000000"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textViewUrlNotification"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#000000"
+        android:layout_toEndOf="@id/imageView2"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/textViewTitleNotification"
+        android:text="TextView" />
+</RelativeLayout>
