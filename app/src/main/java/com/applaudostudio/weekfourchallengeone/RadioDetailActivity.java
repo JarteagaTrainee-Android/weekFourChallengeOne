@@ -26,8 +26,5 @@ public class RadioDetailActivity extends AppCompatActivity {
 
 
 
-    private void bindData(RadioItem itemData){
-
-    }
 
 }
