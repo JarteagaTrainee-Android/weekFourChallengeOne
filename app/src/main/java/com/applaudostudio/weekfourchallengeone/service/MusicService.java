@@ -54,7 +54,6 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             if (intent.getAction().equals(START_FOREGROUND_ACTION)) {
-                Log.v("PLAY/START", "CASE 1");
                 if (!isPlayingMusic()) {
                     RadioItem item = intent.getParcelableExtra(MainActivity.ARG_ITEM_PLAY_ON_SERVICE);
                     // might take long! (for buffering, etc)

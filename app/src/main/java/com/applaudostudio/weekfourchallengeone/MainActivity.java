@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
             startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
             startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
         }
+        toggleButtons(R.id.imageViewPlay);
     }
 
 
@@ -169,9 +170,9 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         if (internetStatus) {
             switch (idButton) {
                 case R.id.imageViewPlay:
-                    mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
-                    mButtonMute.setImageResource(R.drawable.ic_mute_gray);
-                    mButtonStop.setImageResource(R.drawable.ic_stop_gray);
+                        mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
+                        mButtonMute.setImageResource(R.drawable.ic_mute_gray);
+                        mButtonStop.setImageResource(R.drawable.ic_stop_gray);
                     break;
                 case R.id.imageViewStop:
                     mButtonPlay.setImageResource(R.drawable.ic_play_gray);
@@ -179,8 +180,8 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
                     mButtonStop.setImageResource(R.drawable.ic_stop_red);
                     break;
                 case R.id.imageViewMute:
-                    if (PLAYING_MUSIC) {
-                        mButtonPlay.setImageResource(R.drawable.ic_play_blue);
+                    if (mBoundMusicService.isPlayingMusic()) {
+                        mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
                     } else {
                         mButtonPlay.setImageResource(R.drawable.ic_play_gray);
                     }
@@ -188,14 +189,15 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
                     mButtonStop.setImageResource(R.drawable.ic_stop_gray);
                     break;
                 case R.id.imageViewInfo:
-                    if (PLAYING_MUSIC) {
-                        mButtonPlay.setImageResource(R.drawable.ic_play_blue);
+                    if (mBoundMusicService.isPlayingMusic()) {
+                        mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
                     } else {
                         mButtonPlay.setImageResource(R.drawable.ic_play_gray);
                     }
                     mButtonMute.setImageResource(R.drawable.ic_mute_gray);
                     mButtonStop.setImageResource(R.drawable.ic_stop_gray);
                     break;
+
                 default:
                     if (PLAYING_MUSIC) {
                         mButtonPlay.setImageResource(R.drawable.ic_play_blue);
@@ -225,21 +227,26 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
             case R.id.imageViewPlay:
                 if (RADIO_PLAYING_ITEM != null && !mBoundMusicService.isPlayingMusic()) {
                     startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
-                }
+                    toggleButtons(v.getId());
+                }else if(mBoundMusicService.isPlayingMusic())
+                    toggleButtons(v.getId());
                 break;
             case R.id.imageViewStop:
                 if (mBoundMusicService.isPlayingMusic()) {
                     startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
+                    toggleButtons(v.getId());
                 }
                 break;
             case R.id.imageViewMute:
                 if (mBoundMusicService.isPlayingMusic()) {
                     startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_MUTE));
+                    toggleButtons(v.getId());
                 }
                 break;
             case R.id.imageViewInfo:
                 if (RADIO_PLAYING_ITEM != null) {
                     startActivity(communicationGenerator(INTENT_TYPE_RADIO_DETAIL_ACTIVITY));
+                    toggleButtons(v.getId());
                 }
                 break;
             default:
