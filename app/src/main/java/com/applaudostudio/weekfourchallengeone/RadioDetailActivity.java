@@ -16,15 +16,12 @@ public class RadioDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio_detail);
 
-
         txtTitle=findViewById(R.id.textViewTitleDetail);
         txtDescription =findViewById(R.id.textViewDescriptionDetail);
         RadioItem item = getIntent().getParcelableExtra(MainActivity.KEY_RADIO_DETAIL);
 
-
         txtTitle.setText(item.getSubTitle());
         txtDescription.setText(item.getDescription());
-
     }
 
 

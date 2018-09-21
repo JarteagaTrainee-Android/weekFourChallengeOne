@@ -1,13 +1,11 @@
 package com.applaudostudio.weekfourchallengeone;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,9 +23,13 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     public static boolean MUTE_MUSIC;
     //for broadcast network status
     private static boolean internetStatus;
-    private RadioItem RADIO_PLAYING;
+    private RadioItem RADIO_PLAYING_ITEM;
     private static final int INTENT_TYPE_RADIO_DETAIL_ACTIVITY = 0;
+    private static final int INTENT_TYPE_RADIO_ACTION_PLAY = 1;
+    private static final int INTENT_TYPE_RADIO_ACTION_STOP=2;
+
     public static final String KEY_RADIO_DETAIL = "RADIO_DETAIL_DATA";
+    public static final String ARG_ITEM_PLAY_ON_SERVICE = "RADIO_TO_PLAY";
     //View Elements
     private List<RadioItem> mDataSet;
     private RecyclerView mRecyclerView;
@@ -39,13 +41,16 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     private ImageView mButtonMute;
     private TextView mTxtPlaying;
 
+    Intent intentService;
+
     private InternetReceiver mInternetReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        RADIO_PLAYING = null;
+        RADIO_PLAYING_ITEM = null;
+        intentService = null;
         mRecyclerView = findViewById(R.id.recyclerViewRadios);
         initData();
         //Recycler View Section
@@ -63,12 +68,17 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         mButtonMute.setOnClickListener(this);
         mButtonInfo.setOnClickListener(this);
         mTxtPlaying.setText("");
+
+
+        toggleButtons(0);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         toggleButtons(0);//To Execute Default case.
+
         //RECEIVERS
         IntentFilter intentFilter = new IntentFilter();
         // Add network connectivity change action.
@@ -84,9 +94,10 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
 
     @Override
     public void onClickPlayButton(RadioItem item) {
-        RADIO_PLAYING = item;
+        RADIO_PLAYING_ITEM = item;
         bindData();
     }
+
 
     private void initData() {
         PLAYING_MUSIC = false;
@@ -186,22 +197,29 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
 
     @Override
     public void onClick(View v) {
-        toggleButtons(v.getId());
+
         switch (v.getId()) {
             case R.id.imageViewPlay:
-                PLAYING_MUSIC = true;
-                Intent intentService = new Intent(this,MusicService.class);
-                startService(intentService);
+                if (RADIO_PLAYING_ITEM != null && PLAYING_MUSIC!=true) {
+                    PLAYING_MUSIC = true;
+                    startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
+                    toggleButtons(v.getId());
+                }
                 break;
             case R.id.imageViewStop:
-                PLAYING_MUSIC = false;
+                if(PLAYING_MUSIC==true) {
+                    PLAYING_MUSIC = false;
+                    startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
+                    toggleButtons(v.getId());
+                }
                 break;
             case R.id.imageViewMute:
-
+                toggleButtons(v.getId());
                 break;
             case R.id.imageViewInfo:
-                if (RADIO_PLAYING != null)
-                    startActivity(redirectActivity(INTENT_TYPE_RADIO_DETAIL_ACTIVITY));
+                if (RADIO_PLAYING_ITEM != null)
+                    startActivity(communicationGenerator(INTENT_TYPE_RADIO_DETAIL_ACTIVITY));
+                toggleButtons(v.getId());
                 break;
             default:
 
@@ -211,19 +229,28 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         }
     }
 
-    private Intent redirectActivity(int activityType) {
+    private Intent communicationGenerator(int activityType) {
         Intent intent = null;
         switch (activityType) {
             case INTENT_TYPE_RADIO_DETAIL_ACTIVITY:
                 intent = new Intent(this, RadioDetailActivity.class);
-                intent.putExtra(KEY_RADIO_DETAIL, RADIO_PLAYING);
+                intent.putExtra(KEY_RADIO_DETAIL, RADIO_PLAYING_ITEM);
                 return intent;
+            case INTENT_TYPE_RADIO_ACTION_PLAY:
+                intentService = new Intent(this, MusicService.class);
+                intentService.putExtra(ARG_ITEM_PLAY_ON_SERVICE, RADIO_PLAYING_ITEM);
+                intentService.setAction(MusicService.START_FOREGROUND_ACTION);
+                return intentService;
+            case INTENT_TYPE_RADIO_ACTION_STOP:
+                intentService = new Intent(this, MusicService.class);
+                intentService.setAction(MusicService.STOP_FOREGROUND_ACTION);
+                return intentService;
         }
         return intent;
     }
 
     private void bindData() {
-        mTxtPlaying.setText(RADIO_PLAYING.getSubTitle());
+        mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
     }
 
     @Override

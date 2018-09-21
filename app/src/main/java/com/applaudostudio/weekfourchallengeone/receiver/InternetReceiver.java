@@ -8,11 +8,11 @@ import android.widget.Toast;
 import com.applaudostudio.weekfourchallengeone.manager.ConnectionManager;
 
 public class InternetReceiver extends BroadcastReceiver {
+    private InternetConnectionListener mInternetContract;
+
 
     public InternetReceiver() {
     }
-
-    private InternetConnectionListener mInternetContract;
 
     public InternetReceiver(InternetConnectionListener callback){
         mInternetContract=callback;
@@ -21,8 +21,8 @@ public class InternetReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if(checkInternet(context)){
-            Toast toast = Toast.makeText(context, "NETWORK AVAILABLE", Toast.LENGTH_LONG);
-            toast.show();
+            //Toast toast = Toast.makeText(context, "NETWORK AVAILABLE", Toast.LENGTH_LONG);
+            //toast.show();
             mInternetContract.onInternetAvailable(true);
         }else{
             Toast toast = Toast.makeText(context, "NETWORK UNAVAILABLE", Toast.LENGTH_LONG);
@@ -36,12 +36,8 @@ public class InternetReceiver extends BroadcastReceiver {
         return serviceManager.isNetworkAvailable();
     }
 
-
-
-
     public interface InternetConnectionListener{
         void onInternetAvailable(boolean status);
     }
-
 
 }
