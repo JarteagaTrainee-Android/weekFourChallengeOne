@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
 
     public static final String KEY_RADIO_DETAIL = "RADIO_DETAIL_DATA";
     public static final String ARG_ITEM_PLAY_ON_SERVICE = "RADIO_TO_PLAY";
-    public static final String SAVE_ITEM_RADIO="RADIO_SAVED";
+    public static final String SAVE_ITEM_RADIO = "RADIO_SAVED";
     //View Elements
     private List<RadioItem> mDataSet;
     private RecyclerView mRecyclerView;
@@ -101,73 +101,68 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putParcelable(SAVE_ITEM_RADIO,RADIO_PLAYING_ITEM);
+        outState.putParcelable(SAVE_ITEM_RADIO, RADIO_PLAYING_ITEM);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        RADIO_PLAYING_ITEM=savedInstanceState.getParcelable(SAVE_ITEM_RADIO);
-        mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
+        RADIO_PLAYING_ITEM = savedInstanceState.getParcelable(SAVE_ITEM_RADIO);
+        if (RADIO_PLAYING_ITEM != null) {
+            mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
+        }
     }
 
     @Override
     public void onClickPlayButton(RadioItem item) {
         RADIO_PLAYING_ITEM = item;
         bindData();
+        if(!mBoundMusicService.isPlayingMusic()){
+            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
+        }else{
+            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
+            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
+        }
     }
 
 
     private void initData() {
         PLAYING_MUSIC = false;
         MUTE_MUSIC = false;
-
         mButtonPlay = findViewById(R.id.imageViewPlay);
         mButtonInfo = findViewById(R.id.imageViewInfo);
         mButtonStop = findViewById(R.id.imageViewStop);
         mButtonMute = findViewById(R.id.imageViewMute);
         mTxtPlaying = findViewById(R.id.textViewPlaying);
-
-
         mDataSet = new ArrayList<>();
         RadioItem rdItem = new RadioItem();
         rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo");
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
-
         rdItem = new RadioItem();
         rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo2");
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
-
         rdItem = new RadioItem();
         rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo3");
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
-
         rdItem = new RadioItem();
         rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo4");
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
-
         rdItem = new RadioItem();
         rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo5");
         rdItem.setDescription(getString(R.string.radio_description));
-
         mDataSet.add(rdItem);
         mDataSet.add(rdItem);
         mDataSet.add(rdItem);
-        mDataSet.add(rdItem);
-        mDataSet.add(rdItem);
-        mDataSet.add(rdItem);
-        mDataSet.add(rdItem);
-
     }
 
     private void toggleButtons(int idButton) {
@@ -230,26 +225,21 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
             case R.id.imageViewPlay:
                 if (RADIO_PLAYING_ITEM != null && !mBoundMusicService.isPlayingMusic()) {
                     startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
-                    toggleButtons(v.getId());
                 }
                 break;
             case R.id.imageViewStop:
                 if (mBoundMusicService.isPlayingMusic()) {
                     startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
-                    toggleButtons(v.getId());
                 }
                 break;
             case R.id.imageViewMute:
-                if(mBoundMusicService.isPlayingMusic()) {
-                    toggleButtons(v.getId());
-                    Toast.makeText(this, String.valueOf(mBoundMusicService.isPlayingMusic()), Toast.LENGTH_LONG).show();
+                if (mBoundMusicService.isPlayingMusic()) {
                     startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_MUTE));
                 }
                 break;
             case R.id.imageViewInfo:
                 if (RADIO_PLAYING_ITEM != null) {
                     startActivity(communicationGenerator(INTENT_TYPE_RADIO_DETAIL_ACTIVITY));
-                    toggleButtons(v.getId());
                 }
                 break;
             default:
