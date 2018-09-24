@@ -29,24 +29,19 @@ public class MusicService extends Service {
     public static String PLAY_FOREGROUND_ACTION = "PLAY_SERVICE";
     public static String MUTE_FOREGROUND_ACTION = "MUTE_SERVICE";
     public static String PAUSE_FOREGROUND_ACTION = "PAUSE_SERVICE";
-
     private static final String CHANEL_NAME = "RADIO_NOTIFICATION_CHANEL";
-    private static final int FOREGROND_ID=1001;
+    private static final int FOREGROUND_ID =1001;
     private static final int PENDING_TYPE_MAIN = 1;
     private static final int PENDING_TYPE_PAUSE = 2;
     private static final int PENDING_TYPE_PLAY = 3;
     private static final int PENDING_TYPE_MUTE = 4;
     private static final int PENDING_TYPE_CLOSE = 5;
-
     public enum PlayerStates{PAUSED,STOPPED};
     PlayerStates statePlayer;
     AudioManager am;
-
     private static MediaPlayer mediaPlayer;
-
-
+    public MediaPlayerStateListener mListenerMediaPlayerChanges;
     private IBinder mBinder = new MyBinder();
-
 
     @Override
     public void onCreate() {
@@ -77,23 +72,28 @@ public class MusicService extends Service {
                         @Override
                         public void onPrepared(MediaPlayer mp) {
                             mediaPlayer.start();
+                            mListenerMediaPlayerChanges.stateChangePlay();
                         }
                     });
                     mediaPlayer.prepareAsync();
                     //new AsyncPrepareRadio().execute(item.getUrl());
                     initChanel(getApplicationContext(),CHANEL_NAME);
-                    startForeground(FOREGROND_ID, GenerateNotification(item, CHANEL_NAME));
+                    startForeground(FOREGROUND_ID, GenerateNotification(item, CHANEL_NAME));
                 } else {
                     mediaPlayer.pause();
+                    mListenerMediaPlayerChanges.stateChangePause();
                     statePlayer=PlayerStates.PAUSED;
                 }
             } else if (intent.getAction().equals(PLAY_FOREGROUND_ACTION)) {
                 if (!mediaPlayer.isPlaying())
                     mediaPlayer.start();
+                mListenerMediaPlayerChanges.stateChangePlay();
             } else if (intent.getAction().equals(PAUSE_FOREGROUND_ACTION)) {
                 if (mediaPlayer.isPlaying())
                     mediaPlayer.pause();
-                    statePlayer=PlayerStates.PAUSED;
+                mListenerMediaPlayerChanges.stateChangePause();
+
+                statePlayer=PlayerStates.PAUSED;
             } else if (intent.getAction().equals(STOP_FOREGROUND_ACTION)) {
                 if (isMediaPlaying()) {
                     mediaPlayer.stop();
@@ -105,6 +105,7 @@ public class MusicService extends Service {
                 }
             } else if (intent.getAction().equals(MUTE_FOREGROUND_ACTION)) {
                 if (isMediaPlaying()) {
+                    mListenerMediaPlayerChanges.stateChangeMute();
                     am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                     // Change the stream to your stream of choice.
                     if (am != null) {
@@ -189,6 +190,11 @@ public class MusicService extends Service {
         return mediaPlayer != null && mediaPlayer.isPlaying();
     }
 
+    public boolean isMediaMute(){
+        am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        return am.isStreamMute(AudioManager.STREAM_MUSIC);
+    }
+
     public class MyBinder extends Binder {
         public MusicService getService() {
             return MusicService.this;
@@ -208,9 +214,14 @@ public class MusicService extends Service {
 
     }
 
+    public void setMediaPlayerStateChangeLister(MediaPlayerStateListener listenerStates){
+        mListenerMediaPlayerChanges=listenerStates;
+    }
 
     public interface MediaPlayerStateListener{
-
+         void stateChangePlay();
+         void stateChangePause();
+         void stateChangeMute();
     }
 
 

@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -23,7 +24,7 @@ import com.applaudostudio.weekfourchallengeone.service.MusicService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements RadioListAdapter.ItemSelectedListener, View.OnClickListener, InternetReceiver.InternetConnectionListener {
+public class MainActivity extends AppCompatActivity implements RadioListAdapter.ItemSelectedListener, View.OnClickListener, InternetReceiver.InternetConnectionListener, MusicService.MediaPlayerStateListener{
     public static boolean PLAYING_MUSIC;
     public static boolean MUTE_MUSIC;
     //for broadcast network status
@@ -298,7 +299,47 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MyBinder myBinder = (MusicService.MyBinder) service;
             mBoundMusicService = myBinder.getService();
+            mBoundMusicService.setMediaPlayerStateChangeLister(MainActivity.this);
             mServiceBound = true;
         }
     };
+
+    @Override
+    public void stateChangePlay() {
+        this.toggleButtonsClick(TOGGLE_TYPE_PLAY);
+        return;
+    }
+
+    @Override
+    public void stateChangePause() {
+        this.toggleButtonsClick(TOGGLE_TYPE_PAUSE);
+        return;
+    }
+
+    @Override
+    public void stateChangeMute() {
+        this.toggleButtonsClick(TOGGLE_TYPE_MUTE);
+        return;
+    }
+
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        // What keywas pressed
+        int keyCode = event.getKeyCode();
+
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                // Check your event code (KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP etc)
+                if(mBoundMusicService.isMediaMute()){
+                    mButtonMute.setImageResource(R.drawable.ic_mute_gray);
+                }
+                return super.dispatchKeyEvent(event);
+
+            default:
+                // Let the system do what it wanted to do
+                return super.dispatchKeyEvent(event);
+        }
+    }
+
 }
