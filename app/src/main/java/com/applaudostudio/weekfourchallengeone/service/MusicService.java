@@ -1,6 +1,8 @@
 package com.applaudostudio.weekfourchallengeone.service;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -10,10 +12,10 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import com.applaudostudio.weekfourchallengeone.MainActivity;
 import com.applaudostudio.weekfourchallengeone.R;
@@ -28,12 +30,18 @@ public class MusicService extends Service {
     public static String MUTE_FOREGROUND_ACTION = "MUTE_SERVICE";
     public static String PAUSE_FOREGROUND_ACTION = "PAUSE_SERVICE";
 
-
+    private static final String CHANEL_NAME = "RADIO_NOTIFICATION_CHANEL";
+    private static final int FOREGROND_ID=1001;
     private static final int PENDING_TYPE_MAIN = 1;
     private static final int PENDING_TYPE_PAUSE = 2;
     private static final int PENDING_TYPE_PLAY = 3;
     private static final int PENDING_TYPE_MUTE = 4;
     private static final int PENDING_TYPE_CLOSE = 5;
+
+    public enum PlayerStates{PAUSED,STOPPED};
+    PlayerStates statePlayer;
+    AudioManager am;
+
     private static MediaPlayer mediaPlayer;
 
 
@@ -52,9 +60,10 @@ public class MusicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (intent != null) {
             if (intent.getAction().equals(START_FOREGROUND_ACTION)) {
-                if (!isPlayingMusic()) {
+                if (!isMediaPlaying()) {
                     RadioItem item = intent.getParcelableExtra(MainActivity.ARG_ITEM_PLAY_ON_SERVICE);
                     // might take long! (for buffering, etc)
                     mediaPlayer = new MediaPlayer();
@@ -72,9 +81,11 @@ public class MusicService extends Service {
                     });
                     mediaPlayer.prepareAsync();
                     //new AsyncPrepareRadio().execute(item.getUrl());
-                    startForeground(1010, GenerateNotification(item));
+                    initChanel(getApplicationContext(),CHANEL_NAME);
+                    startForeground(FOREGROND_ID, GenerateNotification(item, CHANEL_NAME));
                 } else {
                     mediaPlayer.pause();
+                    statePlayer=PlayerStates.PAUSED;
                 }
             } else if (intent.getAction().equals(PLAY_FOREGROUND_ACTION)) {
                 if (!mediaPlayer.isPlaying())
@@ -82,17 +93,19 @@ public class MusicService extends Service {
             } else if (intent.getAction().equals(PAUSE_FOREGROUND_ACTION)) {
                 if (mediaPlayer.isPlaying())
                     mediaPlayer.pause();
+                    statePlayer=PlayerStates.PAUSED;
             } else if (intent.getAction().equals(STOP_FOREGROUND_ACTION)) {
-                if (isPlayingMusic()) {
+                if (isMediaPlaying()) {
                     mediaPlayer.stop();
                     mediaPlayer.release();
                     mediaPlayer = null;
+                    statePlayer=PlayerStates.STOPPED;
                     stopForeground(true);
                     stopSelf();
                 }
             } else if (intent.getAction().equals(MUTE_FOREGROUND_ACTION)) {
-                if (isPlayingMusic()) {
-                    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (isMediaPlaying()) {
+                    am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                     // Change the stream to your stream of choice.
                     if (am != null) {
                         am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_TOGGLE_MUTE, 0);
@@ -109,11 +122,11 @@ public class MusicService extends Service {
         return mBinder;
     }
 
-    private Notification GenerateNotification(RadioItem item) {
+    private Notification GenerateNotification(RadioItem item, String chanelId) {
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
                 R.drawable.music_sign);
 
-        return new NotificationCompat.Builder(this, "")
+        return new NotificationCompat.Builder(this, chanelId)
                 .setContentTitle(item.getSubTitle())
                 .setTicker(item.getSubTitle())
                 .setContentText(item.getUrl())
@@ -172,16 +185,34 @@ public class MusicService extends Service {
         }
     }
 
-    public boolean isPlayingMusic() {
+    public boolean isMediaPlaying() {
         return mediaPlayer != null && mediaPlayer.isPlaying();
     }
-
 
     public class MyBinder extends Binder {
         public MusicService getService() {
             return MusicService.this;
         }
     }
+
+    public void initChanel(Context context,String ch){
+            if(Build.VERSION.SDK_INT<26){
+                return;
+            }
+        NotificationManager notiManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel notiChanel = new NotificationChannel(ch,ch,NotificationManager.IMPORTANCE_DEFAULT);
+        notiChanel.setDescription("Notifications for Radio Applaudo");
+        if(notiManager!=null){
+            notiManager.createNotificationChannel(notiChanel);
+        }
+
+    }
+
+
+    public interface MediaPlayerStateListener{
+
+    }
+
 
 
 }

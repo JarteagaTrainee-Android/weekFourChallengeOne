@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.media.AudioManager;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,7 +14,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.applaudostudio.weekfourchallengeone.adapter.RadioListAdapter;
 import com.applaudostudio.weekfourchallengeone.model.RadioItem;
@@ -31,12 +31,22 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     private RadioItem RADIO_PLAYING_ITEM;
     private static final int INTENT_TYPE_RADIO_DETAIL_ACTIVITY = 0;
     private static final int INTENT_TYPE_RADIO_ACTION_PLAY = 1;
-    private static final int INTENT_TYPE_RADIO_ACTION_STOP = 2;
-    private static final int INTENT_TYPE_RADIO_ACTION_MUTE = 3;
+    private static final int INTENT_TYPE_RADIO_ACTION_PAUSE = 2;
+    private static final int INTENT_TYPE_RADIO_ACTION_STOP = 3;
+    private static final int INTENT_TYPE_RADIO_ACTION_MUTE = 4;
 
     public static final String KEY_RADIO_DETAIL = "RADIO_DETAIL_DATA";
     public static final String ARG_ITEM_PLAY_ON_SERVICE = "RADIO_TO_PLAY";
     public static final String SAVE_ITEM_RADIO = "RADIO_SAVED";
+
+    private static final int TOGGLE_TYPE_PLAY=1;
+    private static final int TOGGLE_TYPE_PAUSE=2;
+    private static final int TOGGLE_TYPE_STOP=3;
+    private static final int TOGGLE_TYPE_MUTE=4;
+
+
+
+
     //View Elements
     private List<RadioItem> mDataSet;
     private RecyclerView mRecyclerView;
@@ -52,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     private InternetReceiver mInternetReceiver;
     MusicService mBoundMusicService;
     boolean mServiceBound = false;
+
 
 
     @Override
@@ -77,12 +88,12 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         mButtonMute.setOnClickListener(this);
         mButtonInfo.setOnClickListener(this);
         mTxtPlaying.setText("");
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        toggleButtons(0);//To Execute Default case.
 
         //RECEIVERS
         IntentFilter intentFilter = new IntentFilter();
@@ -92,12 +103,66 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, MusicService.class);
+        intent.setAction("");
+        //startService(intent);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
     protected void onDestroy() {
         this.unregisterReceiver(mInternetReceiver);
         super.onDestroy();
 
     }
 
+    @Override
+    public void onClick(View v) {
+        if (mBoundMusicService != null) {
+            switch (v.getId()) {
+                case R.id.imageViewPlay:
+                    if (RADIO_PLAYING_ITEM != null && !mBoundMusicService.isMediaPlaying()) {
+                        startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
+                        toggleButtonsClick(TOGGLE_TYPE_PLAY);
+                        } else if (mBoundMusicService.isMediaPlaying()) {
+                        startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PAUSE));
+                        toggleButtonsClick(TOGGLE_TYPE_PAUSE);
+                    }
+                    break;
+                case R.id.imageViewStop:
+                    if (mBoundMusicService.isMediaPlaying()) {
+                        startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
+                        toggleButtonsClick(TOGGLE_TYPE_STOP);
+                    }
+                    break;
+                case R.id.imageViewMute:
+                    startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_MUTE));
+                    toggleButtonsClick(TOGGLE_TYPE_MUTE);
+                    break;
+                case R.id.imageViewInfo:
+                    if (RADIO_PLAYING_ITEM != null) {
+                        startActivity(communicationGenerator(INTENT_TYPE_RADIO_DETAIL_ACTIVITY));
+                    }
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public void onClickPlayButton(RadioItem item) {
+        RADIO_PLAYING_ITEM = item;
+        bindData();
+        if (!mBoundMusicService.isMediaPlaying()) {
+            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
+        } else {
+            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
+            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
+        }
+        toggleButtonsClick(TOGGLE_TYPE_PLAY);
+
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -112,19 +177,6 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         if (RADIO_PLAYING_ITEM != null) {
             mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
         }
-    }
-
-    @Override
-    public void onClickPlayButton(RadioItem item) {
-        RADIO_PLAYING_ITEM = item;
-        bindData();
-        if(!mBoundMusicService.isPlayingMusic()){
-            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
-        }else{
-            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
-            startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
-        }
-        toggleButtons(R.id.imageViewPlay);
     }
 
 
@@ -143,12 +195,12 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
         rdItem = new RadioItem();
-        rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
+        rdItem.setUrl("http://uk7.internet-radio.com:8119/listen.pls&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo2");
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
         rdItem = new RadioItem();
-        rdItem.setUrl("http://us5.internet-radio.com:8110/listen.pls&t=.m3u");
+        rdItem.setUrl("http://198.178.123.17:10922/listen.pls?sid=1&t=.m3u");
         rdItem.setSubTitle("Radio Applaudo3");
         rdItem.setDescription(getString(R.string.radio_description));
         mDataSet.add(rdItem);
@@ -166,96 +218,11 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         mDataSet.add(rdItem);
     }
 
-    private void toggleButtons(int idButton) {
-        if (internetStatus) {
-            switch (idButton) {
-                case R.id.imageViewPlay:
-                        mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
-                        mButtonMute.setImageResource(R.drawable.ic_mute_gray);
-                        mButtonStop.setImageResource(R.drawable.ic_stop_gray);
-                    break;
-                case R.id.imageViewStop:
-                    mButtonPlay.setImageResource(R.drawable.ic_play_gray);
-                    mButtonMute.setImageResource(R.drawable.ic_mute_gray);
-                    mButtonStop.setImageResource(R.drawable.ic_stop_red);
-                    break;
-                case R.id.imageViewMute:
-                    if (mBoundMusicService.isPlayingMusic()) {
-                        mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
-                    } else {
-                        mButtonPlay.setImageResource(R.drawable.ic_play_gray);
-                    }
-                    mButtonMute.setImageResource(R.drawable.ic_mute_yellow);
-                    mButtonStop.setImageResource(R.drawable.ic_stop_gray);
-                    break;
-                case R.id.imageViewInfo:
-                    if (mBoundMusicService.isPlayingMusic()) {
-                        mButtonPlay.setImageResource(R.drawable.ic_pause_pink);
-                    } else {
-                        mButtonPlay.setImageResource(R.drawable.ic_play_gray);
-                    }
-                    mButtonMute.setImageResource(R.drawable.ic_mute_gray);
-                    mButtonStop.setImageResource(R.drawable.ic_stop_gray);
-                    break;
-
-                default:
-                    if (PLAYING_MUSIC) {
-                        mButtonPlay.setImageResource(R.drawable.ic_play_blue);
-                        mButtonStop.setImageResource(R.drawable.ic_stop_gray);
-                    }
-                    break;
-            }
-        } else { //End if Internet Status
-            mButtonPlay.setImageResource(R.drawable.ic_play_gray);
-            mButtonMute.setImageResource(R.drawable.ic_mute_gray);
-            mButtonStop.setImageResource(R.drawable.ic_stop_gray);
-        }
+    private void bindData() {
+        mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction("");
-        startService(intent);
-        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-    }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.imageViewPlay:
-                if (RADIO_PLAYING_ITEM != null && !mBoundMusicService.isPlayingMusic()) {
-                    startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
-                    toggleButtons(v.getId());
-                }else if(mBoundMusicService.isPlayingMusic())
-                    toggleButtons(v.getId());
-                break;
-            case R.id.imageViewStop:
-                if (mBoundMusicService.isPlayingMusic()) {
-                    startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_STOP));
-                    toggleButtons(v.getId());
-                }
-                break;
-            case R.id.imageViewMute:
-                if (mBoundMusicService.isPlayingMusic()) {
-                    startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_MUTE));
-                    toggleButtons(v.getId());
-                }
-                break;
-            case R.id.imageViewInfo:
-                if (RADIO_PLAYING_ITEM != null) {
-                    startActivity(communicationGenerator(INTENT_TYPE_RADIO_DETAIL_ACTIVITY));
-                    toggleButtons(v.getId());
-                }
-                break;
-            default:
-
-                break;
-
-
-        }
-    }
 
     private Intent communicationGenerator(int activityType) {
         Intent intent = null;
@@ -269,6 +236,10 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
                 intentService.putExtra(ARG_ITEM_PLAY_ON_SERVICE, RADIO_PLAYING_ITEM);
                 intentService.setAction(MusicService.START_FOREGROUND_ACTION);
                 return intentService;
+            case INTENT_TYPE_RADIO_ACTION_PAUSE:
+                intentService = new Intent(this, MusicService.class);
+                intentService.setAction(MusicService.PAUSE_FOREGROUND_ACTION);
+                return intentService;
             case INTENT_TYPE_RADIO_ACTION_STOP:
                 intentService = new Intent(this, MusicService.class);
                 intentService.setAction(MusicService.STOP_FOREGROUND_ACTION);
@@ -281,15 +252,39 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         return intent;
     }
 
-    private void bindData() {
-        mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
+    private void toggleButtonsClick(int enableType){
+        switch (enableType){
+            case TOGGLE_TYPE_PLAY:
+                        mButtonPlay.setImageResource(R.drawable.ic_pause_gray);
+                        mButtonStop.setImageResource(R.drawable.ic_stop_gray);
+                break;
+            case TOGGLE_TYPE_PAUSE:
+                mButtonPlay.setImageResource(R.drawable.ic_play_gray);
+                mButtonStop.setImageResource(R.drawable.ic_stop_gray);
+                break;
+            case TOGGLE_TYPE_STOP:
+                mButtonPlay.setImageResource(R.drawable.ic_play_gray);
+                mButtonStop.setImageResource(R.drawable.ic_stop_red);
+                break;
+            case TOGGLE_TYPE_MUTE:
+                AudioManager am=(AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if(am.isStreamMute(AudioManager.STREAM_MUSIC)){
+                    mButtonMute.setImageResource(R.drawable.ic_mute_gray);
+                }else{
+                    mButtonMute.setImageResource(R.drawable.ic_mute_yellow);
+                }
+
+                break;
+        }
     }
+
+
+
 
     @Override
     public void onInternetAvailable(boolean status) {
         internetStatus = status;
         //default and internet status buttons on/off
-        toggleButtons(0);
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
