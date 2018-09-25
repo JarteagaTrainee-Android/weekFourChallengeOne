@@ -22,6 +22,7 @@ import com.applaudostudio.weekfourchallengeone.R;
 import com.applaudostudio.weekfourchallengeone.model.RadioItem;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class MusicService extends Service {
     public static String START_FOREGROUND_ACTION = "START_SERVICE";
@@ -36,10 +37,11 @@ public class MusicService extends Service {
     private static final int PENDING_TYPE_PLAY = 3;
     private static final int PENDING_TYPE_MUTE = 4;
     private static final int PENDING_TYPE_CLOSE = 5;
-    public enum PlayerStates{PAUSED,STOPPED};
+    public enum PlayerStates{PAUSED,STOPPED}
+
     PlayerStates statePlayer;
     AudioManager am;
-    private static MediaPlayer mediaPlayer;
+    public static MediaPlayer mediaPlayer;
     public MediaPlayerStateListener mListenerMediaPlayerChanges;
     private IBinder mBinder = new MyBinder();
 
@@ -57,7 +59,7 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (intent != null) {
-            if (intent.getAction().equals(START_FOREGROUND_ACTION)) {
+            if (START_FOREGROUND_ACTION.equals(Objects.requireNonNull(intent.getAction()))) {
                 if (!isMediaPlaying()) {
                     RadioItem item = intent.getParcelableExtra(MainActivity.ARG_ITEM_PLAY_ON_SERVICE);
                     // might take long! (for buffering, etc)
@@ -138,10 +140,10 @@ public class MusicService extends Service {
                 .setContentIntent(pendingGenerator(PENDING_TYPE_MAIN))
                 .setOngoing(true)
                 .addAction(android.R.drawable.ic_media_play,
-                        "Play", pendingGenerator(PENDING_TYPE_PLAY))
-                .addAction(android.R.drawable.ic_media_pause, "Pause",
+                        getString(R.string.notification_button_play), pendingGenerator(PENDING_TYPE_PLAY))
+                .addAction(android.R.drawable.ic_media_pause, getString(R.string.notification_pause),
                         pendingGenerator(PENDING_TYPE_PAUSE))
-                .addAction(R.drawable.ic_mute_gray, "Mute",
+                .addAction(R.drawable.ic_mute_gray, getString(R.string.notification_mute),
                         pendingGenerator(PENDING_TYPE_MUTE))
                 .build();
     }
@@ -192,7 +194,9 @@ public class MusicService extends Service {
 
     public boolean isMediaMute(){
         am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        return am.isStreamMute(AudioManager.STREAM_MUSIC);
+            return am!=null && am.isStreamMute(AudioManager.STREAM_MUSIC);
+
+
     }
 
     public class MyBinder extends Binder {
@@ -207,7 +211,7 @@ public class MusicService extends Service {
             }
         NotificationManager notiManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel notiChanel = new NotificationChannel(ch,ch,NotificationManager.IMPORTANCE_DEFAULT);
-        notiChanel.setDescription("Notifications for Radio Applaudo");
+        notiChanel.setDescription(getString(R.string.notificacion_description));
         if(notiManager!=null){
             notiManager.createNotificationChannel(notiChanel);
         }

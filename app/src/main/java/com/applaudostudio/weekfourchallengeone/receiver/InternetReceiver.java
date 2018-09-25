@@ -11,8 +11,6 @@ public class InternetReceiver extends BroadcastReceiver {
     private InternetConnectionListener mInternetContract;
 
 
-    public InternetReceiver() {
-    }
 
     public InternetReceiver(InternetConnectionListener callback){
         mInternetContract=callback;

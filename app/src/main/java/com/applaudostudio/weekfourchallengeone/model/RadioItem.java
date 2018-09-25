@@ -47,7 +47,7 @@ public class RadioItem implements Parcelable {
         dest.writeString(this.description);
     }
 
-    protected RadioItem(Parcel in) {
+    private RadioItem(Parcel in) {
         this.url = in.readString();
         this.subTitle = in.readString();
         this.description = in.readString();

@@ -46,7 +46,7 @@ public class RadioListAdapter extends RecyclerView.Adapter<RadioListAdapter.Radi
         ImageView imgPlayButton;
         TextView txtTitle;
         private ConstraintLayout itemElements;
-        public RadioViewHolder(@NonNull View itemView) {
+        RadioViewHolder(@NonNull View itemView) {
             super(itemView);
             txtTitle=itemView.findViewById(R.id.textViewTitleDetail);
             imgPlayButton = itemView.findViewById(R.id.imageViewButtonPlay);

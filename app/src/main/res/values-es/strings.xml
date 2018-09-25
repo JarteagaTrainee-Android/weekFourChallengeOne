@@ -3,8 +3,8 @@
     <string name="radio_description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</string>
     <string name="now_playing">NOW PLAYING</string>
     <string name="icon_play">Icon Play</string>
-    <string name="notificacion_description">Notifications for Radio Applaudo</string>
+    <string name="notificacion_description">Notificacion para RadioApplaudo</string>
     <string name="notification_button_play">Play</string>
-    <string name="notification_pause">Pause</string>
-    <string name="notification_mute">Mute</string>
+    <string name="notification_pause">Pausa</string>
+    <string name="notification_mute">Silencio</string>
 </resources>

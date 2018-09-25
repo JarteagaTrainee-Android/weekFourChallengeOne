@@ -24,11 +24,10 @@ import com.applaudostudio.weekfourchallengeone.service.MusicService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements RadioListAdapter.ItemSelectedListener, View.OnClickListener, InternetReceiver.InternetConnectionListener, MusicService.MediaPlayerStateListener{
+public class MainActivity extends AppCompatActivity implements RadioListAdapter.ItemSelectedListener, View.OnClickListener, InternetReceiver.InternetConnectionListener, MusicService.MediaPlayerStateListener {
     public static boolean PLAYING_MUSIC;
     public static boolean MUTE_MUSIC;
     //for broadcast network status
-    private static boolean internetStatus;
     private RadioItem RADIO_PLAYING_ITEM;
     private static final int INTENT_TYPE_RADIO_DETAIL_ACTIVITY = 0;
     private static final int INTENT_TYPE_RADIO_ACTION_PLAY = 1;
@@ -40,19 +39,15 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     public static final String ARG_ITEM_PLAY_ON_SERVICE = "RADIO_TO_PLAY";
     public static final String SAVE_ITEM_RADIO = "RADIO_SAVED";
 
-    private static final int TOGGLE_TYPE_PLAY=1;
-    private static final int TOGGLE_TYPE_PAUSE=2;
-    private static final int TOGGLE_TYPE_STOP=3;
-    private static final int TOGGLE_TYPE_MUTE=4;
-
-
+    private static final int TOGGLE_TYPE_PLAY = 1;
+    private static final int TOGGLE_TYPE_PAUSE = 2;
+    private static final int TOGGLE_TYPE_STOP = 3;
+    private static final int TOGGLE_TYPE_MUTE = 4;
 
 
     //View Elements
     private List<RadioItem> mDataSet;
     private RecyclerView mRecyclerView;
-    private RecyclerView.LayoutManager mLayoutManager;
-    private RadioListAdapter mAdapter;
     private ImageView mButtonPlay;
     private ImageView mButtonStop;
     private ImageView mButtonInfo;
@@ -63,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
     private InternetReceiver mInternetReceiver;
     MusicService mBoundMusicService;
     boolean mServiceBound = false;
-
 
 
     @Override
@@ -77,10 +71,10 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         //Recycler View Section
         mRecyclerView.setHasFixedSize(true);
         // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(mLayoutManager);
         // specify an adapter (see also next example)
-        mAdapter = new RadioListAdapter(mDataSet, this);
+        RadioListAdapter mAdapter = new RadioListAdapter(mDataSet, this);
         mRecyclerView.setAdapter(mAdapter);
         mInternetReceiver = new InternetReceiver(this);
         //UI SET CLICK LISTENERS
@@ -101,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         // Add network connectivity change action.
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
         this.registerReceiver(mInternetReceiver, intentFilter);
+
     }
 
     @Override
@@ -127,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
                     if (RADIO_PLAYING_ITEM != null && !mBoundMusicService.isMediaPlaying()) {
                         startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PLAY));
                         toggleButtonsClick(TOGGLE_TYPE_PLAY);
-                        } else if (mBoundMusicService.isMediaPlaying()) {
+                    } else if (mBoundMusicService.isMediaPlaying()) {
                         startService(communicationGenerator(INTENT_TYPE_RADIO_ACTION_PAUSE));
                         toggleButtonsClick(TOGGLE_TYPE_PAUSE);
                     }
@@ -223,10 +218,8 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         mTxtPlaying.setText(RADIO_PLAYING_ITEM.getSubTitle());
     }
 
-
-
     private Intent communicationGenerator(int activityType) {
-        Intent intent = null;
+        Intent intent;
         switch (activityType) {
             case INTENT_TYPE_RADIO_DETAIL_ACTIVITY:
                 intent = new Intent(this, RadioDetailActivity.class);
@@ -249,15 +242,16 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
                 intentService = new Intent(this, MusicService.class);
                 intentService.setAction(MusicService.MUTE_FOREGROUND_ACTION);
                 return intentService;
+            default:
+                return null;
         }
-        return intent;
     }
 
-    private void toggleButtonsClick(int enableType){
-        switch (enableType){
+    private void toggleButtonsClick(int enableType) {
+        switch (enableType) {
             case TOGGLE_TYPE_PLAY:
-                        mButtonPlay.setImageResource(R.drawable.ic_pause_gray);
-                        mButtonStop.setImageResource(R.drawable.ic_stop_gray);
+                mButtonPlay.setImageResource(R.drawable.ic_pause_gray);
+                mButtonStop.setImageResource(R.drawable.ic_stop_gray);
                 break;
             case TOGGLE_TYPE_PAUSE:
                 mButtonPlay.setImageResource(R.drawable.ic_play_gray);
@@ -268,23 +262,21 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
                 mButtonStop.setImageResource(R.drawable.ic_stop_red);
                 break;
             case TOGGLE_TYPE_MUTE:
-                AudioManager am=(AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                if(am.isStreamMute(AudioManager.STREAM_MUSIC)){
-                    mButtonMute.setImageResource(R.drawable.ic_mute_gray);
-                }else{
-                    mButtonMute.setImageResource(R.drawable.ic_mute_yellow);
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (am != null) {
+                    if (am.isStreamMute(AudioManager.STREAM_MUSIC)) {
+                        mButtonMute.setImageResource(R.drawable.ic_mute_gray);
+                    } else {
+                        mButtonMute.setImageResource(R.drawable.ic_mute_yellow);
+                    }
                 }
 
                 break;
         }
     }
 
-
-
-
     @Override
     public void onInternetAvailable(boolean status) {
-        internetStatus = status;
         //default and internet status buttons on/off
     }
 
@@ -301,27 +293,47 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
             mBoundMusicService = myBinder.getService();
             mBoundMusicService.setMediaPlayerStateChangeLister(MainActivity.this);
             mServiceBound = true;
+            checkMediaPlayerStatus();
         }
     };
 
     @Override
     public void stateChangePlay() {
         this.toggleButtonsClick(TOGGLE_TYPE_PLAY);
-        return;
     }
 
     @Override
     public void stateChangePause() {
         this.toggleButtonsClick(TOGGLE_TYPE_PAUSE);
-        return;
     }
 
     @Override
     public void stateChangeMute() {
         this.toggleButtonsClick(TOGGLE_TYPE_MUTE);
-        return;
     }
 
+    public void checkMediaPlayerStatus() {
+        if (mBoundMusicService != null) {
+            if (mBoundMusicService.isMediaPlaying()) {
+                mButtonPlay.setImageResource(R.drawable.ic_pause_gray);
+            } else {
+                mButtonPlay.setImageResource(R.drawable.ic_play_gray);
+            }
+
+            if (mBoundMusicService.isMediaMute()) {
+                mButtonMute.setImageResource(R.drawable.ic_mute_yellow);
+            } else {
+                mButtonMute.setImageResource(R.drawable.ic_mute_gray);
+            }
+
+            if (MusicService.mediaPlayer == null) {
+                mButtonStop.setImageResource(R.drawable.ic_stop_red);
+            } else {
+                mButtonStop.setImageResource(R.drawable.ic_stop_gray);
+            }
+        }
+
+    }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -331,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
                 // Check your event code (KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP etc)
-                if(mBoundMusicService.isMediaMute()){
+                if (mBoundMusicService.isMediaMute()) {
                     mButtonMute.setImageResource(R.drawable.ic_mute_gray);
                 }
                 return super.dispatchKeyEvent(event);
