@@ -343,9 +343,14 @@ public class MainActivity extends AppCompatActivity implements RadioListAdapter.
 
         }
 
-        @Override
+    /***
+     * Override the up volumen key press function to change the mute icons and system music stream mute
+     * @param event
+     * @return
+     */
+    @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
-            // What keywas pressed
+            // What key was pressed
             int keyCode = event.getKeyCode();
 
             switch (keyCode) {
