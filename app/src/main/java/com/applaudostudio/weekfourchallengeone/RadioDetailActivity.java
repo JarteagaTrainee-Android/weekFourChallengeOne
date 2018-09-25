@@ -23,8 +23,4 @@ public class RadioDetailActivity extends AppCompatActivity {
         txtTitle.setText(item.getSubTitle());
         txtDescription.setText(item.getDescription());
     }
-
-
-
-
 }

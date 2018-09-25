@@ -18,12 +18,22 @@ public class RadioListAdapter extends RecyclerView.Adapter<RadioListAdapter.Radi
     private List<RadioItem> mDataSet;
     private final ItemSelectedListener mCallback;
 
-
+    /***
+     * Constructor to set dataset and a colback for the SelectedItem listener
+     * @param mDataSet Data with the radio items
+     * @param callback callback for the item selected.
+     */
     public RadioListAdapter(List<RadioItem> mDataSet, ItemSelectedListener callback) {
         this.mDataSet = mDataSet;
         mCallback=callback;
     }
 
+    /***
+     * Constructor for the view Holder of the recyclerview
+     * @param parent the parent viewGroup
+     * @param viewType Type of view to be render
+     * @return returns a RadioViewHolder
+     */
     @NonNull
     @Override
     public RadioViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -31,17 +41,28 @@ public class RadioListAdapter extends RecyclerView.Adapter<RadioListAdapter.Radi
         return new RadioViewHolder(view);
     }
 
+    /***
+     * bindin for the view holder
+     * @param viewHolder view holder for radio Adapter
+     * @param i item index
+     */
     @Override
     public void onBindViewHolder(@NonNull RadioListAdapter.RadioViewHolder viewHolder,int i) {
         viewHolder.bindData(mDataSet.get(i));
     }
 
+    /***
+     * function to get the data set size.
+     * @return  number of item of the dataset
+     */
     @Override
     public int getItemCount() {
         return mDataSet.size();
     }
 
-
+    /***
+     * Class for the Radio View holder
+     */
     class RadioViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView imgPlayButton;
         TextView txtTitle;
@@ -54,6 +75,10 @@ public class RadioListAdapter extends RecyclerView.Adapter<RadioListAdapter.Radi
             itemElements.setOnClickListener(this);
         }
 
+        /***
+         * On click for all the container
+         * @param view the whole view as parameter
+         */
         @Override
         public void onClick(View view) {
             switch (view.getId()) {
@@ -65,12 +90,19 @@ public class RadioListAdapter extends RecyclerView.Adapter<RadioListAdapter.Radi
             }
         }
 
+        /***
+         * Function to bind the data to the view element
+         * @param item
+         */
         private void bindData(RadioItem item){
                 txtTitle.setText(item.getSubTitle());
         }
 
     }
 
+    /***
+     * Interface for the click on the items to send the data to the activity
+     */
     public interface ItemSelectedListener {
         void onClickPlayButton(RadioItem item);
     }

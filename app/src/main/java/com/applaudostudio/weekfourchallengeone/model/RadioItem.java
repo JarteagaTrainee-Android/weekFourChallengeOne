@@ -3,6 +3,9 @@ package com.applaudostudio.weekfourchallengeone.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/***
+ * model of each radio with the parcelable implementation.
+ */
 public class RadioItem implements Parcelable {
     private String url;
     private String subTitle;
